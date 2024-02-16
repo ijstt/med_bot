@@ -1,4 +1,4 @@
-TOKEN = '6031104463:AAF_647pdYkqK6Kdp1o7tM7i0m_nlB3yUZc'
+TOKEN = '6301304083:AAEwdAXOWEavQuImXW8Go1hqndIuKe85bOA'
 
 WEATHER_TOKEN = '7eab98eaa6b639e75b4dc30c6c30435b'  # токен openweathermap
 
