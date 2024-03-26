@@ -5,13 +5,16 @@ main_btn1 = types.KeyboardButton("📋 Записаться к врачу")
 main_btn2 = types.KeyboardButton("❤ Симптомы")
 main_btn3 = types.KeyboardButton("🏠 Личный кабинет")
 main_btn4 = types.KeyboardButton("🏥 Выбрать больницу")
-main_btn5 = types.KeyboardButton("☎ Обратиться в техподдержку")
+main_btn5 = types.KeyboardButton("☎ Обратиться в поддержку")
 menu.add(main_btn3, main_btn2, main_btn1, main_btn4, main_btn5)
 
-lk_menu = types.ReplyKeyboardMarkup(row_width=1)
+lk_menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
 doctor_btn = types.KeyboardButton("📋 Записаться к врачу")
+photo_btn = types.KeyboardButton("📷Загрузить фото")
 back_btn = types.KeyboardButton("⬅ Назад")
-lk_menu.add(doctor_btn, back_btn)
+lk_menu.add(doctor_btn, photo_btn, back_btn)
+
+none = types.ReplyKeyboardRemove()
 
 doctor = types.InlineKeyboardMarkup(row_width=1)
 doctor_btn = types.InlineKeyboardButton("Перейти по ссылке", url="https://www.gosuslugi.ru/category/health",

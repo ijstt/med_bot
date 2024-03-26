@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import ContentType
 
 import config
 import keyboard as kb
@@ -95,6 +95,9 @@ async def help_command(message: types.Message):
 
 @dp.message_handler(text=['🏠 Личный кабинет'])
 async def lk(message: types.Message):
+    if db.get_photo(message.from_user.id):
+        await bot.send_photo(chat_id=message.from_user.id,
+                             photo=db.get_photo(message.from_user.id))
     await bot.send_message(chat_id=message.from_user.id,
                            text=f"Ваше имя - {db.get_name(message.from_user.id)}",
                            reply_markup=kb.lk_menu)
@@ -543,7 +546,7 @@ async def hospital(message: types.Message):
 
 @dp.callback_query_handler(lambda message: message.data[:6] == "region")
 async def region(callback_query: types.CallbackQuery):
-    region_name = callback_query.data[:6]
+    region_name = callback_query.data[6:]
     keyb = kb.make_keyboard("city", db.get_cities(region_name))
     await bot.delete_message(chat_id=callback_query.from_user.id,
                              message_id=callback_query.message.message_id)
@@ -554,13 +557,61 @@ async def region(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda message: message.data[:4] == "city")
 async def region(callback_query: types.CallbackQuery):
-    city_name = callback_query.data[:4]
+    city_name = callback_query.data[4:]
+    db.set_city(city_name, callback_query.from_user.id)
     keyb = kb.make_keyboard("hospital", db.get_hospitals(city_name))
     await bot.delete_message(chat_id=callback_query.from_user.id,
                              message_id=callback_query.message.message_id)
     await bot.send_message(chat_id=callback_query.from_user.id,
                            text="Выберите больницу",
                            reply_markup=keyb)
+
+
+@dp.callback_query_handler(lambda message: message.data[:8] == "hospital")
+async def hospital(callback_query: types.CallbackQuery):
+    hospital_name = callback_query.data[8:]
+    info = db.get_info(db.get_city(callback_query.from_user.id), hospital_name)
+    try:
+        ll, spn = get_ll_span(info[2])
+
+        if ll and spn:
+            lon, lat = map(float, ll.split(','))
+            point = "{ll},pm2vvl".format(ll=ll)
+            static_api_request = "http://static-maps.yandex.ru/1.x/?ll={ll}&spn={spn}&l=map&pt={point}".format(
+                **locals())
+            await bot.delete_message(chat_id=callback_query.from_user.id,
+                                     message_id=callback_query.message.message_id)
+
+            await bot.send_photo(chat_id=callback_query.from_user.id,
+                                 photo=static_api_request,
+                                 caption=f"{info[1]} {info[3]}")
+    except RuntimeError as ex:
+        await bot.reply_text(str(ex))
+
+
+@dp.message_handler(text=["☎ Обратиться в поддержку"])
+async def waiting_for_support(message: types.Message):
+    await bot.send_message(chat_id=message.from_user.id,
+                           text="Администратор - @admin_id")
+
+
+@dp.message_handler(text=["📷Загрузить фото"])
+async def photo(message: types.Message):
+    await bot.send_message(chat_id=message.from_user.id,
+                           text="Отправьте свою фотографию",
+                           reply_markup=kb.none)
+
+
+@dp.message_handler(content_types=ContentType.PHOTO)
+async def process_photo(message: types.Message):
+    # Получаем список фотографий в сообщении
+    photo = message.photo[-1]
+
+    await bot.send_message(chat_id=message.from_user.id,
+                           text="Фото загружено успешно!",
+                           reply_markup=kb.lk_menu)
+    # Обрабатываем фотографию (например, сохраняем ее в базу данных)
+    db.set_photo(photo.file_id, message.from_user.id)
 
 
 if __name__ == "__main__":

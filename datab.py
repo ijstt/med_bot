@@ -30,7 +30,7 @@ class Database:
             result = self.cursor.execute("SELECT * FROM `regions`").fetchall()
             regions = []
             for row in result:
-                regions.append(row[0])
+                regions.append(row[1])
             return regions
 
     def get_cities(self, name):
@@ -38,7 +38,7 @@ class Database:
             result = self.cursor.execute(f"SELECT * FROM `{name}`").fetchall()
             cities = []
             for row in result:
-                cities.append(row[0])
+                cities.append(row[1])
             return cities
 
     def get_hospitals(self, name):
@@ -46,5 +46,36 @@ class Database:
             result = self.cursor.execute(f"SELECT * FROM `{name}`").fetchall()
             hospitals = []
             for row in result:
-                hospitals.append(row[0])
+                hospitals.append(row[1])
             return hospitals
+
+    def get_info(self, city, name):
+        with self.connection:
+            result = self.cursor.execute(f"SELECT * FROM `{city}` WHERE `name` = ?", (name,)).fetchall()
+            for row in result:
+                res = row
+            return res
+
+    def set_city(self, city, tg_id):
+        with self.connection:
+            return self.cursor.execute("UPDATE `users` SET `city` = ? WHERE `tg_id` = ?",
+                                       (city, tg_id,))
+
+    def get_city(self, tg_id):
+        with self.connection:
+            result = self.cursor.execute(f"SELECT `city` FROM `users` WHERE `tg_id` == {tg_id}").fetchall()
+            for row in result:
+                answer = row[0]
+            return answer
+
+    def get_photo(self, tg_id):
+        with self.connection:
+            result = self.cursor.execute(f"SELECT `photo` FROM `users` WHERE `tg_id` == {tg_id}").fetchall()
+            for row in result:
+                ans = row[0]
+            return ans
+
+    def set_photo(self, photo, tg_id):
+        with self.connection:
+            return self.cursor.execute("UPDATE `users` SET `photo` = ? WHERE `tg_id` = ?",
+                                       (photo, tg_id,))
