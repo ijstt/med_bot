@@ -3,7 +3,8 @@ import requests
 
 def geocode(address):
     # Собираем запрос для геокодера.
-    geocoder_request = "http://geocode-maps.yandex.ru/1.x/?apikey=40d1649f-0493-4b70-98ba-98533de7710b&geocode={address}&format=json".format(**locals())
+    geocoder_request = "http://geocode-maps.yandex.ru/1.x/?apikey=40d1649f-0493-4b70-98ba-98533de7710b&geocode={address}&format=json".format(
+        **locals())
     # Выполняем запрос.
     response = requests.get(geocoder_request)
 

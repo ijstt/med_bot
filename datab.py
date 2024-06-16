@@ -79,3 +79,77 @@ class Database:
         with self.connection:
             return self.cursor.execute("UPDATE `users` SET `photo` = ? WHERE `tg_id` = ?",
                                        (photo, tg_id,))
+
+    def get_docs(self, hospital):
+        with self.connection:
+            return self.cursor.execute(f"SELECT * FROM `{hospital}`").fetchall()
+
+    def get_doc(self, hospital, who):
+        with self.connection:
+            return self.cursor.execute(f"SELECT * FROM `{hospital}` WHERE `who` = ?", (who,)).fetchall()
+
+    def get_from_name(self, hospital, name):
+        with self.connection:
+            return self.cursor.execute(f"SELECT * FROM `{hospital}` WHERE `name` = ?", (name,)).fetchall()
+
+    def get_admin_name(self):
+        with self.connection:
+            result = self.cursor.execute(f"SELECT `name` FROM `admin`").fetchall()
+            for row in result:
+                name = row[0]
+            return name
+
+    def get_admin_password(self):
+        with self.connection:
+            result = self.cursor.execute(f"SELECT `pass` FROM `admin`").fetchall()
+            for row in result:
+                password = row[0]
+            return password
+
+    def delete_user(self, id):
+        with self.connection:
+            return self.cursor.execute(f"DELETE FROM `users` WHERE `tg_id` = {id}")
+
+    def create_obl(self, name):
+        with self.connection:
+            self.cursor.execute(f"CREATE TABLE [{name}] (id INTEGER PRIMARY KEY UNIQUE NOT NULL, name TEXT);")
+            self.cursor.execute(f"INSERT INTO `regions` (`name`) VALUES (?)", (name,))
+            self.connection.commit()
+
+    def check(self, name, flag=False):
+        with self.connection:
+            if flag:
+                result = self.cursor.execute(
+                    f"SELECT name FROM sqlite_master WHERE type='table' AND name='{name[:14]}';").fetchall()
+            else:
+                result = self.cursor.execute(
+                    f"SELECT name FROM sqlite_master WHERE type='table' AND name='{name}';").fetchall()
+            return bool(len(result))
+
+    def create_gor(self, name):
+        with self.connection:
+            return self.cursor.execute(
+                f"CREATE TABLE {name} (id INTEGER PRIMARY KEY UNIQUE NOT NULL, name TEXT, address TEXT, number TEXT);")
+
+    def add_gor(self, name, obl):
+        with self.connection:
+            return self.cursor.execute(f"INSERT INTO `{obl}` (`name`) VALUES (?)", (name,))
+
+    def create_hospital(self, name):
+        with self.connection:
+            return self.cursor.execute(
+                f"CREATE TABLE [{name[:14]}] (id INTEGER PRIMARY KEY UNIQUE NOT NULL, name TEXT, who TEXT, cabinet INTEGER);")
+
+    def add_hos(self, name, gor, adr, num):
+        with self.connection:
+            return self.cursor.execute(f"INSERT INTO `{gor}` (`name`, `address`, `number`) VALUES (?, ?, ?)",
+                                       (name, adr, num))
+
+    def add_doc(self, name, who, hos, cab):
+        with self.connection:
+            return self.cursor.execute(f"INSERT INTO `{hos[:14]}` (`name`, `who`, `cabinet`) VALUES (?, ?, ?)",
+                                       (name, who, cab))
+
+    def del_doc(self, name, hos):
+        with self.connection:
+            return self.cursor.execute(f"DELETE FROM `{hos[:14]}` WHERE `name` = ?", (name,))
